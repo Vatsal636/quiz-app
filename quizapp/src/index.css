@@ -1,0 +1,289 @@
+@import "tailwindcss";
+
+/* ── Base Styles ── */
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 antialiased;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* ── Custom Utilities (Tailwind v4 syntax) ── */
+
+@utility glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+@utility quiz-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 1.5rem;
+  transition: all 0.3s;
+  cursor: pointer;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.1);
+    transform: scale(1.02) translateY(-4px);
+  }
+}
+
+@utility btn-primary {
+  @apply px-6 py-3 text-white font-semibold rounded-xl;
+  background: linear-gradient(to right, #4f46e5, #7c3aed);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.25);
+  transition: all 0.2s;
+  &:hover {
+    background: linear-gradient(to right, #6366f1, #8b5cf6);
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+@utility btn-secondary {
+  @apply px-5 py-2.5 text-slate-200 font-medium rounded-xl;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.2s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+@utility btn-danger {
+  @apply px-5 py-2.5 text-white font-semibold rounded-xl;
+  background: linear-gradient(to right, #dc2626, #e11d48);
+  box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.25);
+  transition: all 0.2s;
+  &:hover {
+    background: linear-gradient(to right, #ef4444, #f43f5e);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* ── Option Buttons ── */
+@utility option-default {
+  @apply w-full text-left p-4 rounded-xl font-medium cursor-pointer;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@utility option-selected {
+  @apply w-full text-left p-4 rounded-xl font-medium text-indigo-200;
+  border: 2px solid #6366f1;
+  background: rgba(99, 102, 241, 0.15);
+  transition: all 0.2s;
+}
+
+@utility option-correct {
+  @apply w-full text-left p-4 rounded-xl font-medium text-emerald-200 cursor-default;
+  border: 2px solid #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  transition: all 0.2s;
+}
+
+@utility option-wrong {
+  @apply w-full text-left p-4 rounded-xl font-medium text-red-200 cursor-default;
+  border: 2px solid #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  transition: all 0.2s;
+}
+
+@utility option-disabled {
+  @apply w-full text-left p-4 rounded-xl font-medium text-slate-500 cursor-default;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.2s;
+}
+
+/* ── Progress Bar ── */
+@utility progress-track {
+  @apply w-full h-2.5 rounded-full overflow-hidden;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@utility progress-fill {
+  @apply h-full rounded-full;
+  background: linear-gradient(to right, #6366f1, #8b5cf6);
+  transition: all 0.5s ease-out;
+}
+
+/* ── Badges ── */
+@utility badge-easy {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+@utility badge-medium {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+@utility badge-hard {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ── Stat Card ── */
+@utility stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+/* ── Navigator Dots ── */
+@utility nav-dot-current {
+  @apply w-10 h-10 rounded-lg font-semibold text-sm flex items-center justify-center text-white;
+  background: #4f46e5;
+  box-shadow: 0 0 0 2px #818cf8, 0 0 0 4px #0f172a, 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+  transition: all 0.2s;
+}
+
+@utility nav-dot-answered {
+  @apply w-10 h-10 rounded-lg font-semibold text-sm flex items-center justify-center text-slate-200;
+  background: rgba(255, 255, 255, 0.15);
+  transition: all 0.2s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@utility nav-dot-correct {
+  @apply w-10 h-10 rounded-lg font-semibold text-sm flex items-center justify-center text-white;
+  background: rgba(16, 185, 129, 0.8);
+  transition: all 0.2s;
+}
+
+@utility nav-dot-wrong {
+  @apply w-10 h-10 rounded-lg font-semibold text-sm flex items-center justify-center text-white;
+  background: rgba(239, 68, 68, 0.8);
+  transition: all 0.2s;
+}
+
+@utility nav-dot-unanswered {
+  @apply w-10 h-10 rounded-lg font-semibold text-sm flex items-center justify-center text-slate-500;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ── Timer ── */
+@utility timer-normal {
+  color: #cbd5e1;
+}
+
+@utility timer-warning {
+  color: #fbbf24;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@utility timer-danger {
+  color: #f87171;
+  animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Animations ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@utility animate-slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@utility animate-scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}
