@@ -34,7 +34,7 @@ export default function App() {
       if (!saved || saved.quizStatus !== "attempt") return;
 
       try {
-        // Fetch full quiz data via simulated API
+        // Fetch full quiz data via API
         setQuizStatus("loading");
         const quiz = await fetchQuizById(saved.quizId);
 
@@ -82,7 +82,7 @@ export default function App() {
     setPendingQuizSummary(quizSummary);
 
     try {
-      // Fetch full quiz data (with questions) via simulated API
+      // Fetch full quiz data (with questions) via API
       const fullQuiz = await fetchQuizById(quizSummary.id);
       const questions = randomizeQuiz(fullQuiz.questions);
 

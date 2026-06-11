@@ -1,71 +1,57 @@
-/**
- * Simulated API layer.
- * Wraps local quiz data with artificial delay to mimic hosted API fetching.
- * Replace these functions with real fetch() calls when a backend is available.
- */
-
-import { quizzes } from "../data/quizzes";
-
-const API_DELAY_MS = 700;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /**
- * Simulate a network delay.
+ * Reusable request helper with error handling for network failures,
+ * non-2xx responses, and invalid JSON.
  */
-function delay(ms = API_DELAY_MS) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+async function request(endpoint) {
+  if (!BASE_URL) {
+    throw new Error(
+      "API base URL is not configured. Set VITE_API_BASE_URL in your .env file."
+    );
+  }
 
-/**
- * Simulate a random API failure (for testing error UI).
- * Set SIMULATE_ERROR to true to force errors during development.
- */
-const SIMULATE_ERROR = false;
-const ERROR_RATE = 0; // 0 = never fail, 0.3 = 30% failure rate
+  const url = `${BASE_URL}${endpoint}`;
+  let response;
 
-function maybeThrow() {
-  if (SIMULATE_ERROR || Math.random() < ERROR_RATE) {
-    throw new Error("Failed to fetch quizzes. Please check your connection and try again.");
+  try {
+    response = await fetch(url);
+  } catch {
+    throw new Error(
+      "Network error — unable to reach the quiz server. Please check your connection and try again."
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `Server responded with ${response.status} ${response.statusText}. Please try again later.`
+    );
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    throw new Error(
+      "Received an invalid response from the server. Please try again later."
+    );
   }
 }
 
 /**
- * Fetch all available quizzes.
- * Returns quiz metadata (without full question data) for the selection screen.
+ * Fetch all available quizzes (metadata only, no questions).
+ * GET /quizzes
  * @returns {Promise<Array>} List of quiz summaries
  */
 export async function fetchQuizzes() {
-  await delay();
-  maybeThrow();
-
-  // Return quiz summaries (strip question details for listing)
-  return quizzes.map((quiz) => ({
-    id: quiz.id,
-    title: quiz.title,
-    description: quiz.description,
-    difficulty: quiz.difficulty,
-    durationMinutes: quiz.durationMinutes,
-    passingPercentage: quiz.passingPercentage,
-    marksPerQuestion: quiz.marksPerQuestion,
-    negativeMarking: quiz.negativeMarking,
-    negativeMarks: quiz.negativeMarks,
-    totalQuestions: quiz.questions.length,
-  }));
+  return request("/quizzes");
 }
 
 /**
  * Fetch a single quiz by ID, including full question data.
- * @param {string} quizId - The quiz ID to fetch
+ * GET /quizzes/:id
+ * @param {string} quizId
  * @returns {Promise<Object>} Complete quiz data with questions
  */
 export async function fetchQuizById(quizId) {
-  await delay();
-  maybeThrow();
-
-  const quiz = quizzes.find((q) => q.id === quizId);
-  if (!quiz) {
-    throw new Error(`Quiz not found: "${quizId}"`);
-  }
-
-  // Return a deep copy to prevent mutation of the source data
-  return JSON.parse(JSON.stringify(quiz));
+  return request(`/quizzes/${encodeURIComponent(quizId)}`);
 }
