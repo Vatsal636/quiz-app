@@ -43,7 +43,8 @@ async function request(endpoint) {
  * @returns {Promise<Array>} List of quiz summaries
  */
 export async function fetchQuizzes() {
-  return request("/quizzes");
+  const response = await request("/quizzes");
+  return response.data;
 }
 
 /**
@@ -53,5 +54,6 @@ export async function fetchQuizzes() {
  * @returns {Promise<Object>} Complete quiz data with questions
  */
 export async function fetchQuizById(quizId) {
-  return request(`/quizzes/${encodeURIComponent(quizId)}`);
+  const response = await request(`/quizzes/${encodeURIComponent(quizId)}`);
+  return response.data;
 }
