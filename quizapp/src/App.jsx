@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { quizzes } from "./data/quizzes";
+import { fetchQuizById } from "./utils/api";
 import { randomizeQuiz } from "./utils/shuffle";
 import { calculateScore } from "./utils/scoring";
 import {
@@ -12,9 +12,11 @@ import QuizSelection from "./components/QuizSelection";
 import QuizAttempt from "./components/QuizAttempt";
 import ResultDashboard from "./components/ResultDashboard";
 import ReviewAnswers from "./components/ReviewAnswers";
+import LoadingSpinner from "./components/LoadingSpinner";
+import ErrorDisplay from "./components/ErrorDisplay";
 
 export default function App() {
-  const [quizStatus, setQuizStatus] = useState("selection"); // selection | attempt | result | review
+  const [quizStatus, setQuizStatus] = useState("selection"); // selection | loading | attempt | result | review
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [randomizedQuestions, setRandomizedQuestions] = useState([]);
   const [userAnswers, setUserAnswers] = useState({});
@@ -22,18 +24,24 @@ export default function App() {
   const [scoreData, setScoreData] = useState(null);
   const [timeTaken, setTimeTaken] = useState(0);
   const [initialState, setInitialState] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+  const [pendingQuizSummary, setPendingQuizSummary] = useState(null);
 
   // On mount: restore saved attempt from localStorage
   useEffect(() => {
-    const saved = loadAttemptState();
-    if (saved && saved.quizStatus === "attempt") {
-      const quiz = quizzes.find((q) => q.id === saved.quizId);
-      if (quiz) {
+    const restoreAttempt = async () => {
+      const saved = loadAttemptState();
+      if (!saved || saved.quizStatus !== "attempt") return;
+
+      try {
+        // Fetch full quiz data via simulated API
+        setQuizStatus("loading");
+        const quiz = await fetchQuizById(saved.quizId);
+
         setSelectedQuiz(quiz);
         setRandomizedQuestions(saved.randomizedQuestions);
         setUserAnswers(saved.userAnswers || {});
         setCheckedQuestions(saved.checkedQuestions || {});
-        setQuizStatus("attempt");
 
         // Calculate remaining time
         const totalDuration = quiz.durationMinutes * 60;
@@ -41,14 +49,15 @@ export default function App() {
         const remaining = Math.max(0, totalDuration - elapsed);
 
         if (remaining <= 0) {
-          // Time already expired while away
-          handleSubmit(
-            saved.userAnswers || {},
-            saved.checkedQuestions || {},
-            totalDuration,
-            quiz,
-            saved.randomizedQuestions
-          );
+          // Time already expired while away — auto-submit
+          const answers = saved.userAnswers || {};
+          const checked = saved.checkedQuestions || {};
+          const score = calculateScore(quiz, saved.randomizedQuestions, answers, checked);
+          setScoreData(score);
+          setTimeTaken(totalDuration);
+          saveBestScore(quiz.id, score);
+          clearAttemptState();
+          setQuizStatus("result");
           return;
         }
 
@@ -56,40 +65,66 @@ export default function App() {
           ...saved,
           timerSeconds: remaining,
         });
+        setQuizStatus("attempt");
+      } catch {
+        // If restore fails, go back to selection
+        clearAttemptState();
+        setQuizStatus("selection");
       }
+    };
+
+    restoreAttempt();
+  }, []);
+
+  const handleStartQuiz = useCallback(async (quizSummary) => {
+    setQuizStatus("loading");
+    setLoadError(null);
+    setPendingQuizSummary(quizSummary);
+
+    try {
+      // Fetch full quiz data (with questions) via simulated API
+      const fullQuiz = await fetchQuizById(quizSummary.id);
+      const questions = randomizeQuiz(fullQuiz.questions);
+
+      setSelectedQuiz(fullQuiz);
+      setRandomizedQuestions(questions);
+      setUserAnswers({});
+      setCheckedQuestions({});
+      setScoreData(null);
+      setTimeTaken(0);
+      setInitialState({
+        currentQuestionIndex: 0,
+        userAnswers: {},
+        checkedQuestions: {},
+        timerSeconds: fullQuiz.durationMinutes * 60,
+        startTime: Date.now(),
+      });
+
+      // Save initial state
+      saveAttemptState({
+        quizId: fullQuiz.id,
+        randomizedQuestions: questions,
+        currentQuestionIndex: 0,
+        userAnswers: {},
+        checkedQuestions: {},
+        score: 0,
+        timerSeconds: fullQuiz.durationMinutes * 60,
+        quizStatus: "attempt",
+        startTime: Date.now(),
+      });
+
+      setQuizStatus("attempt");
+      setPendingQuizSummary(null);
+    } catch (err) {
+      setLoadError(err.message || "Failed to load quiz data.");
     }
   }, []);
 
-  const handleStartQuiz = useCallback((quiz) => {
-    const questions = randomizeQuiz(quiz.questions);
-    setSelectedQuiz(quiz);
-    setRandomizedQuestions(questions);
-    setUserAnswers({});
-    setCheckedQuestions({});
-    setScoreData(null);
-    setTimeTaken(0);
-    setQuizStatus("attempt");
-    setInitialState({
-      currentQuestionIndex: 0,
-      userAnswers: {},
-      checkedQuestions: {},
-      timerSeconds: quiz.durationMinutes * 60,
-      startTime: Date.now(),
-    });
-
-    // Save initial state
-    saveAttemptState({
-      quizId: quiz.id,
-      randomizedQuestions: questions,
-      currentQuestionIndex: 0,
-      userAnswers: {},
-      checkedQuestions: {},
-      score: 0,
-      timerSeconds: quiz.durationMinutes * 60,
-      quizStatus: "attempt",
-      startTime: Date.now(),
-    });
-  }, []);
+  const handleRetryLoad = useCallback(() => {
+    if (pendingQuizSummary) {
+      handleStartQuiz(pendingQuizSummary);
+    }
+  }, [pendingQuizSummary, handleStartQuiz]);
 
   const handleSubmit = useCallback(
     (answers, checked, elapsed, quizOverride, questionsOverride) => {
@@ -116,7 +151,8 @@ export default function App() {
   const handleRetake = useCallback(() => {
     if (selectedQuiz) {
       clearAttemptState();
-      handleStartQuiz(selectedQuiz);
+      // Re-fetch and re-randomize via handleStartQuiz
+      handleStartQuiz({ id: selectedQuiz.id });
     }
   }, [selectedQuiz, handleStartQuiz]);
 
@@ -129,6 +165,8 @@ export default function App() {
     setCheckedQuestions({});
     setScoreData(null);
     setInitialState(null);
+    setLoadError(null);
+    setPendingQuizSummary(null);
   }, []);
 
   const handleReview = useCallback(() => {
@@ -148,6 +186,25 @@ export default function App() {
     <>
       {quizStatus === "selection" && (
         <QuizSelection onStartQuiz={handleStartQuiz} />
+      )}
+
+      {quizStatus === "loading" && !loadError && (
+        <div className="min-h-screen flex items-center justify-center">
+          <LoadingSpinner message="Loading quiz..." />
+        </div>
+      )}
+
+      {quizStatus === "loading" && loadError && (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="max-w-md w-full px-4">
+            <ErrorDisplay message={loadError} onRetry={handleRetryLoad} />
+            <div className="text-center mt-4">
+              <button onClick={handleGoHome} className="btn-secondary">
+                ← Back to Quizzes
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {quizStatus === "attempt" && selectedQuiz && (
