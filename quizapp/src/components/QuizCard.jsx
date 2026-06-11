@@ -33,7 +33,7 @@ export default function QuizCard({ quiz, onStart }) {
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="bg-white/5 rounded-xl p-3 text-center">
           <div className="text-lg font-bold text-white">
-            {quiz.questions.length}
+            {quiz.totalQuestions ?? quiz.questions?.length ?? 0}
           </div>
           <div className="text-[11px] text-slate-500 uppercase tracking-wider mt-0.5">
             Questions
@@ -49,7 +49,7 @@ export default function QuizCard({ quiz, onStart }) {
         </div>
         <div className="bg-white/5 rounded-xl p-3 text-center">
           <div className="text-lg font-bold text-white">
-            {quiz.marksPerQuestion * quiz.questions.length}
+            {quiz.marksPerQuestion * (quiz.totalQuestions ?? quiz.questions?.length ?? 0)}
           </div>
           <div className="text-[11px] text-slate-500 uppercase tracking-wider mt-0.5">
             Max Marks

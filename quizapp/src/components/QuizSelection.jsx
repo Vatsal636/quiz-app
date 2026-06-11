@@ -1,7 +1,31 @@
-import { quizzes } from "../data/quizzes";
+import { useState, useEffect, useCallback } from "react";
+import { fetchQuizzes } from "../utils/api";
 import QuizCard from "./QuizCard";
+import LoadingSpinner from "./LoadingSpinner";
+import ErrorDisplay from "./ErrorDisplay";
 
 export default function QuizSelection({ onStartQuiz }) {
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadQuizzes = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchQuizzes();
+      setQuizzes(data);
+    } catch (err) {
+      setError(err.message || "Failed to load quizzes.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadQuizzes();
+  }, [loadQuizzes]);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -21,13 +45,31 @@ export default function QuizSelection({ onStartQuiz }) {
         </p>
       </div>
 
-      {/* Quiz Grid */}
+      {/* Content Area */}
       <div className="max-w-5xl mx-auto px-4 pb-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {quizzes.map((quiz) => (
-            <QuizCard key={quiz.id} quiz={quiz} onStart={onStartQuiz} />
-          ))}
-        </div>
+        {loading && (
+          <LoadingSpinner message="Fetching quizzes..." />
+        )}
+
+        {error && !loading && (
+          <ErrorDisplay message={error} onRetry={loadQuizzes} />
+        )}
+
+        {!loading && !error && quizzes.length === 0 && (
+          <div className="text-center py-20">
+            <div className="text-4xl mb-4">📭</div>
+            <h3 className="text-lg font-bold text-white mb-2">No quizzes available</h3>
+            <p className="text-slate-400 text-sm">Check back later for new quizzes.</p>
+          </div>
+        )}
+
+        {!loading && !error && quizzes.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {quizzes.map((quiz) => (
+              <QuizCard key={quiz.id} quiz={quiz} onStart={onStartQuiz} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
