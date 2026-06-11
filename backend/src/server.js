@@ -22,7 +22,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Routes will be added here
+import quizRoutes from './routes/quizRoutes.js';
+
+// Routes
+app.use('/api/quizzes', quizRoutes);
 
 // 404 Handler
 app.use((req, res, next) => {
